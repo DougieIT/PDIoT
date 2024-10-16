@@ -10,7 +10,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
-import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
@@ -21,13 +20,8 @@ import com.specknet.pdiotapp.R
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
-import org.tensorflow.lite.Interpreter
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.MappedByteBuffer
-import java.nio.channels.FileChannel
-import java.io.FileInputStream
 import kotlin.collections.ArrayList
+
 
 class LiveDataActivity : AppCompatActivity() {
 
@@ -42,13 +36,11 @@ class LiveDataActivity : AppCompatActivity() {
 
     var time = 0f
     lateinit var allRespeckData: LineData
+
     lateinit var allThingyData: LineData
 
     lateinit var respeckChart: LineChart
     lateinit var thingyChart: LineChart
-
-    lateinit var classificationTextView: TextView
-    lateinit var tflite: Interpreter
 
     // global broadcast receiver so we can unregister it
     lateinit var respeckLiveUpdateReceiver: BroadcastReceiver
@@ -62,11 +54,6 @@ class LiveDataActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_data)
-
-        classificationTextView = findViewById(R.id.classificationTextView)
-
-        // Load TensorFlow Lite model
-        tflite = Interpreter(loadModelFile("model.tflite"))
 
         setupCharts()
 
@@ -92,11 +79,6 @@ class LiveDataActivity : AppCompatActivity() {
                     time += 1
                     updateGraph("respeck", x, y, z)
 
-                    // Run model inference and update classification result
-                    val classificationResult = classifySensorData(x, y, z)
-                    runOnUiThread {
-                        classificationTextView.text = classificationResult
-                    }
                 }
             }
         }
@@ -130,12 +112,6 @@ class LiveDataActivity : AppCompatActivity() {
                     time += 1
                     updateGraph("thingy", x, y, z)
 
-                    // Optionally, classify sensor data for Thingy
-                    // Uncomment this if you want to classify Thingy data
-                    // val classificationResult = classifySensorData(x, y, z)
-                    // runOnUiThread {
-                    //     classificationTextView.text = classificationResult
-                    // }
                 }
             }
         }
@@ -146,44 +122,16 @@ class LiveDataActivity : AppCompatActivity() {
         looperThingy = handlerThreadThingy.looper
         val handlerThingy = Handler(looperThingy)
         this.registerReceiver(thingyLiveUpdateReceiver, filterTestThingy, null, handlerThingy)
+
     }
 
-    private fun loadModelFile(modelFilename: String): MappedByteBuffer {
-        val fileDescriptor = assets.openFd(modelFilename)
-        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
-        val fileChannel = inputStream.channel
-        val startOffset = fileDescriptor.startOffset
-        val declaredLength = fileDescriptor.declaredLength
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
-    }
-
-    private fun classifySensorData(x: Float, y: Float, z: Float): String {
-        // Prepare input buffer
-        val inputBuffer = ByteBuffer.allocateDirect(3 * 4).order(ByteOrder.nativeOrder())  // 3 floats (x, y, z)
-        inputBuffer.putFloat(x)
-        inputBuffer.putFloat(y)
-        inputBuffer.putFloat(z)
-
-        // Prepare output buffer (adjust size based on your model)
-        val outputBuffer = ByteBuffer.allocateDirect(4 * 1).order(ByteOrder.nativeOrder())  // Assuming 1 float output
-
-        // Run the model inference
-        tflite.run(inputBuffer, outputBuffer)
-
-        // Get classification result (index of the predicted class)
-        outputBuffer.rewind()
-        val classificationIndex = outputBuffer.float
-
-        // Map classification index to label
-        val labels = listOf("Class A", "Class B", "Class C", "Class D")  // Adjust based on your actual labels
-        return labels[classificationIndex.toInt()]
-    }
 
     fun setupCharts() {
         respeckChart = findViewById(R.id.respeck_chart)
         thingyChart = findViewById(R.id.thingy_chart)
 
-        // Respeck setup
+        // Respeck
+
         time = 0f
         val entries_res_accel_x = ArrayList<Entry>()
         val entries_res_accel_y = ArrayList<Entry>()
@@ -197,9 +145,24 @@ class LiveDataActivity : AppCompatActivity() {
         dataSet_res_accel_y.setDrawCircles(false)
         dataSet_res_accel_z.setDrawCircles(false)
 
-        dataSet_res_accel_x.color = ContextCompat.getColor(this, R.color.red)
-        dataSet_res_accel_y.color = ContextCompat.getColor(this, R.color.green)
-        dataSet_res_accel_z.color = ContextCompat.getColor(this, R.color.blue)
+        dataSet_res_accel_x.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.red
+            )
+        )
+        dataSet_res_accel_y.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.green
+            )
+        )
+        dataSet_res_accel_z.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.blue
+            )
+        )
 
         val dataSetsRes = ArrayList<ILineDataSet>()
         dataSetsRes.add(dataSet_res_accel_x)
@@ -210,7 +173,9 @@ class LiveDataActivity : AppCompatActivity() {
         respeckChart.data = allRespeckData
         respeckChart.invalidate()
 
-        // Thingy setup
+        // Thingy
+
+        time = 0f
         val entries_thingy_accel_x = ArrayList<Entry>()
         val entries_thingy_accel_y = ArrayList<Entry>()
         val entries_thingy_accel_z = ArrayList<Entry>()
@@ -223,9 +188,24 @@ class LiveDataActivity : AppCompatActivity() {
         dataSet_thingy_accel_y.setDrawCircles(false)
         dataSet_thingy_accel_z.setDrawCircles(false)
 
-        dataSet_thingy_accel_x.color = ContextCompat.getColor(this, R.color.red)
-        dataSet_thingy_accel_y.color = ContextCompat.getColor(this, R.color.green)
-        dataSet_thingy_accel_z.color = ContextCompat.getColor(this, R.color.blue)
+        dataSet_thingy_accel_x.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.red
+            )
+        )
+        dataSet_thingy_accel_y.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.green
+            )
+        )
+        dataSet_thingy_accel_z.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.blue
+            )
+        )
 
         val dataSetsThingy = ArrayList<ILineDataSet>()
         dataSetsThingy.add(dataSet_thingy_accel_x)
@@ -238,7 +218,8 @@ class LiveDataActivity : AppCompatActivity() {
     }
 
     fun updateGraph(graph: String, x: Float, y: Float, z: Float) {
-        // Update the graph with new data
+        // take the first element from the queue
+        // and update the graph with it
         if (graph == "respeck") {
             dataSet_res_accel_x.addEntry(Entry(time, x))
             dataSet_res_accel_y.addEntry(Entry(time, y))
@@ -264,7 +245,10 @@ class LiveDataActivity : AppCompatActivity() {
                 thingyChart.moveViewToX(thingyChart.lowestVisibleX + 40)
             }
         }
+
+
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
