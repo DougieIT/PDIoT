@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
@@ -20,7 +21,13 @@ import com.specknet.pdiotapp.R
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
+import java.util.LinkedList
 import kotlin.collections.ArrayList
+import org.tensorflow.lite.Interpreter
+import java.io.FileInputStream
+import java.io.IOException
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 
 
 class LiveDataActivity : AppCompatActivity() {
@@ -42,6 +49,9 @@ class LiveDataActivity : AppCompatActivity() {
     lateinit var respeckChart: LineChart
     lateinit var thingyChart: LineChart
 
+    lateinit var classificationTextView: TextView
+
+
     // global broadcast receiver so we can unregister it
     lateinit var respeckLiveUpdateReceiver: BroadcastReceiver
     lateinit var thingyLiveUpdateReceiver: BroadcastReceiver
@@ -51,17 +61,52 @@ class LiveDataActivity : AppCompatActivity() {
     val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
     val filterTestThingy = IntentFilter(Constants.ACTION_THINGY_BROADCAST)
 
+    @Throws(IOException::class)
+    private fun loadModelFile(tflite : String): MappedByteBuffer {
+        val MODEL_ASSETS_PATH = tflite
+        val assetFileDescrptor = this.assets.openFd(MODEL_ASSETS_PATH)
+        val fileInputStream = FileInputStream(assetFileDescrptor.getFileDescriptor())
+        val fileChannel = fileInputStream.getChannel()
+        val startOffset = assetFileDescrptor.startOffset
+        val declaredLength = assetFileDescrptor.getDeclaredLength()
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+    }
+
+    val noToString: Map<Int, String> = mapOf(
+        0 to "Sitting/ Standing",
+        1 to "Lying down on left",
+        2 to "Lying down of right",
+        3 to "Lying down on back",
+        4 to "Lying down on stomach",
+        5 to "walking",
+        6 to "running",
+        7 to "acending stairs",
+        8 to "descending staits",
+        9 to "shuffle walking",
+        10 to "misc"
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_data)
 
         setupCharts()
 
+        classificationTextView = findViewById(R.id.classificationTextView)
+        val windowSize = 50  // Adjust based on model requirements
+        val sensorDataBuffer = ArrayList<FloatArray>() // To store sensor readings
+        var interpreter : Interpreter? = Interpreter(loadModelFile("model.tflite"))
+        var lastExecutionTime = 0L
+//        for (i in 1..50){
+//            predictions.add(floatArrayOf(0.0734863281F, 0.0370483398F, (-3.40637207e-01).toFloat(),
+//                17.90625F, 33.171875F, 17.109375F))
+//        }
+
         // set up the broadcast receiver
         respeckLiveUpdateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
 
-                Log.i("thread", "I am running on thread = " + Thread.currentThread().name)
+                //Log.i("thread", "I am running on thread = " + Thread.currentThread().name)
 
                 val action = intent.action
 
@@ -69,12 +114,41 @@ class LiveDataActivity : AppCompatActivity() {
 
                     val liveData =
                         intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
-                    Log.d("Live", "onReceive: liveData = " + liveData)
+                    //Log.d("Live", "onReceive: liveData = " + liveData)
 
                     // get all relevant intent contents
                     val x = liveData.accelX
                     val y = liveData.accelY
                     val z = liveData.accelZ
+                    val gyro_x = liveData.gyro.x
+                    val gyro_y = liveData.gyro.y
+                    val gyro_z = liveData.gyro.z
+
+
+                    val reading = floatArrayOf(x, y, z,gyro_x,gyro_y,gyro_z)
+                    sensorDataBuffer.add(reading)
+
+                    if (sensorDataBuffer.size >= windowSize){
+                        // classify
+//                        classificationTextView.text = windowSize.toString()
+                        val currentTime = System.currentTimeMillis()
+
+                        if (currentTime - lastExecutionTime >= 2000) {
+                            lastExecutionTime = currentTime
+                            var outputArray = FloatArray(11)
+//                            Log.d("higg", sensorDataBuffer)
+                            interpreter!!.run(arrayOf(sensorDataBuffer.toTypedArray()), arrayOf(outputArray))
+
+                            var out_no = (outputArray.indices.maxByOrNull {outputArray[it]} ?: -1)
+                            runOnUiThread {
+                                classificationTextView.text = noToString[out_no] ?: "Un"
+                            }
+                        }
+
+                        sensorDataBuffer.removeFirst()
+                    }
+
+
 
                     time += 1
                     updateGraph("respeck", x, y, z)
@@ -84,12 +158,14 @@ class LiveDataActivity : AppCompatActivity() {
         }
 
         // register receiver on another thread
+
         val handlerThreadRespeck = HandlerThread("bgThreadRespeckLive")
         handlerThreadRespeck.start()
         looperRespeck = handlerThreadRespeck.looper
         val handlerRespeck = Handler(looperRespeck)
         this.registerReceiver(respeckLiveUpdateReceiver, filterTestRespeck, null, handlerRespeck)
 
+        /*
         // set up the broadcast receiver
         thingyLiveUpdateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -122,7 +198,7 @@ class LiveDataActivity : AppCompatActivity() {
         looperThingy = handlerThreadThingy.looper
         val handlerThingy = Handler(looperThingy)
         this.registerReceiver(thingyLiveUpdateReceiver, filterTestThingy, null, handlerThingy)
-
+        */
     }
 
 
