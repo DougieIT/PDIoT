@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "870604791056",
+    "project_id": "pdiot-j1",
+    "storage_bucket": "pdiot-j1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:870604791056:android:ca0dc1ad6278d9cb021995",
+        "android_client_info": {
+          "package_name": "com.specknet.pdiotapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCK3s0y0_7uzQel1jsLQgs9F8LgD1G-fmY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
