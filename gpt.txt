@@ -1,92 +1,14 @@
-package com.specknet.pdiotapp.live
+private fun normalizeArray(inputArray: Array<Array<FloatArray>>): Array<Array<FloatArray>> {
+    // Ensure the input array has the correct shape (1, 50, 3)
+    require(inputArray.size == 1 && inputArray[0].size == 50 && inputArray[0][0].size == 3) {
+        "Input array must have shape (1, 50, 3)"
+    }
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.os.Bundle
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.Looper
-import android.util.Log
-import android.view.View
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import com.specknet.pdiotapp.R
-import com.specknet.pdiotapp.database.ActivityHistoryManager
-import com.specknet.pdiotapp.database.ActivityLog
-import com.specknet.pdiotapp.database.AppDatabase
-import com.specknet.pdiotapp.utils.Constants
-import com.specknet.pdiotapp.utils.RESpeckLiveData
-import com.specknet.pdiotapp.utils.ThingyLiveData
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.model.Model
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
-class LiveDataActivity : AppCompatActivity() {
-
-    // ... [Other member variables remain unchanged]
-
-    // Model interpreters
-    lateinit var wakefulModel: Interpreter
-    lateinit var physicalModel: Interpreter
-    lateinit var socialModel: Interpreter
-
-    // ... [Rest of the code]
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_live_data)
-
-        // ... [Initialization code remains unchanged]
-
-        // Initialize models
-        try {
-            wakefulModel = loadModelFile("daily_activites_with_metadata.tflite")
-            physicalModel = loadModelFile("daily_activites_with_metadata.tflite")
-            socialModel = loadModelFile("daily_activites_with_metadata.tflite")
-        } catch (e: IOException) {
-            Log.e("ModelError", "Error loading models", e)
+    // Normalize each (x, y, z) triplet in the array
+    return Array(1) { i -> // First dimension is 1
+        Array(50) { j -> // Second dimension is 50
+            val (x, y, z) = inputArray[i][j]
+            normalize(x, y, z) // Apply the normalization function
         }
-
-        // Log model tensor shapes
-        logModelTensorDetails(wakefulModel, "WakefulModel")
-        logModelTensorDetails(physicalModel, "PhysicalModel")
-        logModelTensorDetails(socialModel, "SocialModel")
-
-        // ... [Rest of the onCreate code]
     }
-
-    /**
-     * Logs the input and output tensor shapes of a given Interpreter.
-     *
-     * @param interpreter The TensorFlow Lite Interpreter instance.
-     * @param modelName A string identifier for the model.
-     */
-    private fun logModelTensorDetails(interpreter: Interpreter, modelName: String) {
-        val inputDetails = interpreter.getInputDetails()
-        val outputDetails = interpreter.getOutputDetails()
-
-        Log.d("$modelName Input Details", inputDetails.joinToString("\n") { detail ->
-            "Name: ${detail.name}, Shape: ${detail.shape.contentToString()}, Type: ${detail.type}, Quantization: ${detail.quantization}"
-        })
-
-        Log.d("$modelName Output Details", outputDetails.joinToString("\n") { detail ->
-            "Name: ${detail.name}, Shape: ${detail.shape.contentToString()}, Type: ${detail.type}, Quantization: ${detail.quantization}"
-        })
-    }
-
-    // ... [Rest of the LiveDataActivity code remains unchanged]
 }
