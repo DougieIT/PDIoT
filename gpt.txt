@@ -1,14 +1,136 @@
-private fun normalizeArray(inputArray: Array<Array<FloatArray>>): Array<Array<FloatArray>> {
-    // Ensure the input array has the correct shape (1, 50, 3)
-    require(inputArray.size == 1 && inputArray[0].size == 50 && inputArray[0][0].size == 3) {
-        "Input array must have shape (1, 50, 3)"
+class LiveDataActivity : AppCompatActivity() {
+    private val MAX_DATA_SET_SIZE = 200
+
+    // Global graph variables
+    lateinit var dataSet_res_accel_x: LineDataSet
+    lateinit var dataSet_res_accel_y: LineDataSet
+    lateinit var dataSet_res_accel_z: LineDataSet
+
+    lateinit var dataSet_thingy_accel_x: LineDataSet
+    lateinit var dataSet_thingy_accel_y: LineDataSet
+    lateinit var dataSet_thingy_accel_z: LineDataSet
+
+    var time = 0f
+    lateinit var allRespeckData: LineData
+    lateinit var allThingyData: LineData
+
+    lateinit var historyManager: ActivityHistoryManager
+
+    lateinit var respeckChart: LineChart
+    lateinit var thingyChart: LineChart
+
+    lateinit var wakefulTextView: TextView
+    lateinit var physicalTextView: TextView
+    lateinit var socialTextView: TextView
+
+    lateinit var respeckLiveUpdateReceiver: BroadcastReceiver
+    lateinit var thingyLiveUpdateReceiver: BroadcastReceiver
+    lateinit var looperRespeck: Looper
+    lateinit var looperThingy: Looper
+
+    lateinit var user_email: String
+
+    val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
+    val filterTestThingy = IntentFilter(Constants.ACTION_THINGY_BROADCAST)
+
+    lateinit var wakefulModel: Interpreter
+    lateinit var physicalModel: Interpreter
+    lateinit var socialModel: Interpreter
+
+    // Normalization values per model
+    val normalizationValues: MutableMap<Interpreter, Pair<FloatArray, FloatArray>> = mutableMapOf()
+
+    val noToString: Map<Int, String> = mapOf(
+        0 to "ascending",
+        1 to "descending",
+        2 to "lying on back",
+        3 to "lying on left",
+        4 to "lying on right",
+        5 to "lying on stomach",
+        6 to "misc",
+        7 to "normal walking",
+        8 to "running",
+        9 to "shuffle walking",
+        10 to "sitting / standing"
+    )
+
+    val UPDATE_FREQUENCY = 2000 // in milliseconds
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_live_data)
+
+        val db = AppDatabase.getDatabase(applicationContext)
+        historyManager = db.activityHistoryManager()
+
+        user_email = intent.getStringExtra("user_email") ?: "No User"
+
+        socialTextView = findViewById(R.id.socialTextView)
+        physicalTextView = findViewById(R.id.physicalTextView)
+        wakefulTextView = findViewById(R.id.wakefulTextView)
+        setupCharts()
+
+        try {
+            wakefulModel = Interpreter(loadModelFile("TRY_2.tflite"))
+            physicalModel = Interpreter(loadModelFile("TRY_3.tflite"))
+            socialModel = Interpreter(loadModelFile("TRY_2.tflite"))
+
+            normalizationValues[wakefulModel] = Pair(
+                floatArrayOf(-0.03325532f, -0.59998163f, 0.03538302f),
+                floatArrayOf(0.45624453f, 0.54131043f, 0.51403646f)
+            )
+
+            normalizationValues[physicalModel] = Pair(
+                floatArrayOf(-0.06434685f, -0.44510961f, 0.06297908f),
+                floatArrayOf(0.50625266f, 0.48976289f, 0.59320394f)
+            )
+
+            normalizationValues[socialModel] = Pair(
+                floatArrayOf(-0.03325532f, -0.59998163f, 0.03538302f),
+                floatArrayOf(0.45624453f, 0.54131043f, 0.51403646f)
+            )
+        } catch (e: IOException) {
+            Log.e("ModelError", "Error loading models", e)
+        }
+
+        val modelToTextBox: Map<Interpreter?, TextView> = mapOf(
+            wakefulModel to wakefulTextView,
+            physicalModel to physicalTextView,
+            socialModel to socialTextView
+        )
+
+        val windowSize = 50
+        respeckListener(windowSize, modelToTextBox)
+        thingyListener()
     }
 
-    // Normalize each (x, y, z) triplet in the array
-    return Array(1) { i -> // First dimension is 1
-        Array(50) { j -> // Second dimension is 50
-            val (x, y, z) = inputArray[i][j]
-            normalize(x, y, z) // Apply the normalization function
-        }
+    @Throws(IOException::class)
+    private fun loadModelFile(tflite: String): MappedByteBuffer {
+        val assetFileDescriptor = this.assets.openFd(tflite)
+        val fileInputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
+        val fileChannel = fileInputStream.channel
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, assetFileDescriptor.startOffset, assetFileDescriptor.declaredLength)
     }
-}
+
+    private fun normalize(x: Float, y: Float, z: Float, mean: FloatArray, stdDev: FloatArray): FloatArray {
+        return floatArrayOf(
+            (x - mean[0]) / stdDev[0],
+            (y - mean[1]) / stdDev[1],
+            (z - mean[2]) / stdDev[2]
+        )
+    }
+
+    fun runModel(interpreter: Interpreter?, sensorData: Array<FloatArray>): String {
+        if (interpreter == null) return "No model loaded"
+
+        val (mean, stdDev) = normalizationValues[interpreter]
+            ?: error("Normalization values not found for the model")
+
+        val normalizedData = sensorData.map { normalize(it[0], it[1], it[2], mean, stdDev) }.toTypedArray()
+        val inputShape = arrayOf(normalizedData)
+        val outputArray = Array(1) { FloatArray(11) }
+        interpreter.run(inputShape, outputArray)
+
+        val outNo = outputArray[0].indices.maxByOrNull { outputArray[0][it] } ?: -1
+        return noToString[outNo] ?: "Invalid activity number"
+    }
