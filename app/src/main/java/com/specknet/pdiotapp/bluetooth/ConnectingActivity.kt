@@ -187,7 +187,7 @@ class ConnectingActivity : AppCompatActivity() {
      * @param adapter The [NfcAdapter] used for the foreground dispatch.
      */
     fun setupForegroundDispatch(activity: Activity, adapter: NfcAdapter) {
-        Log.d(TAG, "setupForegroundDispatch: here ")
+       // Log.d(TAG, "setupForegroundDispatch: here ")
         val intent = Intent(activity.applicationContext, activity.javaClass)
         intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         val pendingIntent = PendingIntent.getActivity(activity.applicationContext, 0, intent, 0)
@@ -218,19 +218,19 @@ class ConnectingActivity : AppCompatActivity() {
     }
 
     override fun onNewIntent(intent: Intent?) {
-        Log.d(TAG, "onNewIntent: here")
+       // Log.d(TAG, "onNewIntent: here")
         super.onNewIntent(intent)
         handleIntent(intent)
     }
 
     private fun handleIntent(intent: Intent?) {
-        Log.d(TAG, "handleIntent: here")
+     //   Log.d(TAG, "handleIntent: here")
         val action = intent?.action
 
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             val type = intent.type
 
-            Log.d(TAG, "handleIntent: type = " + type)
+           // Log.d(TAG, "handleIntent: type = " + type)
 
             if (MIME_TEXT_PLAIN.equals(type)) {
                 // This is the Respeck
@@ -246,21 +246,21 @@ class ConnectingActivity : AppCompatActivity() {
                 val ndefMessage = ndef.cachedNdefMessage
                 val records = ndefMessage.records
 
-                Log.i("NFCReader", "Read records")
-                Log.i("NFCReader", "Found " + records.size + " record(s)")
-                Log.i("NFCReader", records[0].toMimeType())
+              //  Log.i("NFCReader", "Read records")
+              //  Log.i("NFCReader", "Found " + records.size + " record(s)")
+              //  Log.i("NFCReader", records[0].toMimeType())
 
                 val payload = records[0].payload
-                Log.i("NFCReader", "Payload length: " + payload.size)
+               // Log.i("NFCReader", "Payload length: " + payload.size)
 
                 val payload_str = String(payload)
-                Log.i("NFCReader", "Payload : $payload_str")
+              //  Log.i("NFCReader", "Payload : $payload_str")
 
                 val ble_name = payload_str.substring(20)
 
-                Log.i("NFCReader", "BLE name: $ble_name")
+              //  Log.i("NFCReader", "BLE name: $ble_name")
                 val ble_addr: String = Utils.bytesToHexNfc(Arrays.copyOfRange(payload, 5, 11))
-                Log.i("NFCReader", "BLE Address: $ble_addr")
+              //  Log.i("NFCReader", "BLE Address: $ble_addr")
 
                 Toast.makeText(this, "NFC scanned $ble_name ($ble_addr)", Toast.LENGTH_LONG).show()
 
@@ -273,7 +273,7 @@ class ConnectingActivity : AppCompatActivity() {
             }
             else {
                 // this is the thingy
-                Log.d(TAG, "handleIntent: here after type")
+             //   Log.d(TAG, "handleIntent: here after type")
                 val tag: Tag? = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
 
                 val ndef = Ndef.get(tag)
@@ -286,21 +286,21 @@ class ConnectingActivity : AppCompatActivity() {
                 val ndefMessage = ndef.cachedNdefMessage
                 val records = ndefMessage.records
 
-                Log.i("NFCReader", "Read records")
-                Log.i("NFCReader", "Found " + records.size + " record(s)")
-                Log.i("NFCReader", records[1].toMimeType())
+              //  Log.i("NFCReader", "Read records")
+              //  Log.i("NFCReader", "Found " + records.size + " record(s)")
+              //  Log.i("NFCReader", records[1].toMimeType())
 
                 val payload = records[1].payload
-                Log.i("NFCReader", "Payload length: " + payload.size)
+            //    Log.i("NFCReader", "Payload length: " + payload.size)
 
                 val payload_str = String(payload)
-                Log.i("NFCReader", "Payload: $payload_str")
+            //    Log.i("NFCReader", "Payload: $payload_str")
 
                 val ble_addr = payload_str.substring(3, 20)
 //
 //                Log.i("NFCReader", "BLE name: $ble_name")
 //                val ble_addr: String = Utils.bytesToHex(Arrays.copyOfRange(payload, 5, 11))
-                Log.i("NFCReader", "BLE Address: $ble_addr")
+             //   Log.i("NFCReader", "BLE Address: $ble_addr")
 //
                 Toast.makeText(this, "NFC scanned ($ble_addr)", Toast.LENGTH_LONG).show()
 
@@ -334,7 +334,7 @@ class ConnectingActivity : AppCompatActivity() {
             var scanResult = data?.extras?.getString("ScanResult")
 
             if (scanResult != null) {
-                Log.i("ble", "Scan result=" + scanResult)
+                //Log.i("ble", "Scan result=" + scanResult)
 
                 if (scanResult.contains(":")) {
                     // this is a respeck V6 and we should store its MAC address
@@ -354,7 +354,7 @@ class ConnectingActivity : AppCompatActivity() {
                         sb.insert(0, "0105-")
                     scanResult = sb.toString()
 
-                    Log.i("Debug", "Scan result = " + scanResult)
+                //    Log.i("Debug", "Scan result = " + scanResult)
                     respeck_code.setText(scanResult)
                     sharedPreferences.edit().putString(
                         Constants.RESPECK_MAC_ADDRESS_PREF,

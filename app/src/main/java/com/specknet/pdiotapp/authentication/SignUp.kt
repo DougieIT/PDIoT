@@ -1,4 +1,4 @@
-package com.specknet.pdiotapp.database
+package com.specknet.pdiotapp.authentication
 
 import android.content.Intent
 import android.os.Bundle
@@ -13,7 +13,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import com.specknet.pdiotapp.MainActivity
 import com.specknet.pdiotapp.R
-import com.specknet.pdiotapp.onboarding.OnBoardingActivity
 
 class SignUpActivity : AppCompatActivity() {
     private lateinit var emailField: EditText

@@ -12,12 +12,14 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import com.google.android.material.snackbar.Snackbar
 import com.specknet.pdiotapp.bluetooth.BluetoothSpeckService
 import com.specknet.pdiotapp.bluetooth.ConnectingActivity
+import com.specknet.pdiotapp.authentication.LoginActivity
 import com.specknet.pdiotapp.live.LiveDataActivity
 import com.specknet.pdiotapp.onboarding.OnBoardingActivity
 import com.specknet.pdiotapp.utils.Constants
@@ -29,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     // buttons and textviews
     lateinit var liveProcessingButton: Button
     lateinit var pairingButton: Button
+    lateinit var currentUserTxt: TextView
 
     // permissions
     lateinit var permissionAlertDialog: AlertDialog.Builder
@@ -44,30 +47,31 @@ class MainActivity : AppCompatActivity() {
     // broadcast receiver
     val filter = IntentFilter()
 
-    var isUserFirstTime = false
+    var isUserFirstTime = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // check whether the onboarding screen should be shown
-        val sharedPreferences = getSharedPreferences(Constants.PREFERENCES_FILE, Context.MODE_PRIVATE)
-        if (sharedPreferences.contains(Constants.PREF_USER_FIRST_TIME)) {
+        val sharedPreferences =
+            getSharedPreferences(Constants.PREFERENCES_FILE, Context.MODE_PRIVATE)
+        if (isUserFirstTime) {
+            Log.d("debug", "FIRST TIME LOGIN")
+            val loginIntent = Intent(this, LoginActivity::class.java)
+            startActivity(loginIntent)
+            //finish() // Optional: Close MainActivity so the user can’t return to it
             isUserFirstTime = false
-        }
-        else {
+        } else {
             isUserFirstTime = true
             sharedPreferences.edit().putBoolean(Constants.PREF_USER_FIRST_TIME, false).apply()
             val introIntent = Intent(this, OnBoardingActivity::class.java)
             startActivity(introIntent)
         }
 
-        liveProcessingButton = findViewById(R.id.live_button)
-        pairingButton = findViewById(R.id.ble_button)
 
         permissionAlertDialog = AlertDialog.Builder(this)
 
-        setupClickListeners()
 
         setupPermissions()
 
@@ -79,18 +83,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun setupClickListeners() {
-        liveProcessingButton.setOnClickListener {
-            val intent = Intent(this, LiveDataActivity::class.java)
-            startActivity(intent)
-        }
 
-        pairingButton.setOnClickListener {
-            val intent = Intent(this, ConnectingActivity::class.java)
-            startActivity(intent)
-        }
-
-    }
 
     fun setupPermissions() {
         // BLE permissions
@@ -291,5 +284,7 @@ class MainActivity : AppCompatActivity() {
 
         return super.onOptionsItemSelected(item)
     }
+
+
 
 }

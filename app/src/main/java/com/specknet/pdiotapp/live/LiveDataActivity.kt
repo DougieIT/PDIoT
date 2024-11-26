@@ -4,13 +4,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
@@ -18,21 +18,46 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.specknet.pdiotapp.R
+import com.specknet.pdiotapp.database.ActivityHistoryManager
+import com.specknet.pdiotapp.database.ActivityLog
+import com.specknet.pdiotapp.database.AppDatabase
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
-import java.util.LinkedList
-import kotlin.collections.ArrayList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.io.IOException
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
-
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class LiveDataActivity : AppCompatActivity() {
+    private val MAX_DATA_SET_SIZE = 200
 
-    // global graph variables
+    // **1. Define Normalization Constants using a Data Class**
+    data class NormalizationParams(
+        val mean: FloatArray,
+        val std: FloatArray
+    )
+
+    // Existing normalization parameters for TRY_2.tflite
+    private val normalizationParamsTRY2 = NormalizationParams(
+        mean = floatArrayOf(-0.03325532f, -0.59998163f, 0.03538302f),
+        std = floatArrayOf(0.45624453f, 0.54131043f, 0.51403646f)
+    )
+
+    // New normalization parameters for TRY_3.tflite
+    private val normalizationParamsTRY3 = NormalizationParams(
+        mean = floatArrayOf(-0.06434685f, -0.44510961f, 0.06297908f),
+        std = floatArrayOf(0.50625266f, 0.48976289f, 0.59320394f)
+    )
+
+    // Global graph variables
     lateinit var dataSet_res_accel_x: LineDataSet
     lateinit var dataSet_res_accel_y: LineDataSet
     lateinit var dataSet_res_accel_z: LineDataSet
@@ -43,130 +68,229 @@ class LiveDataActivity : AppCompatActivity() {
 
     var time = 0f
     lateinit var allRespeckData: LineData
-
     lateinit var allThingyData: LineData
+
+    lateinit var historyManager: ActivityHistoryManager
 
     lateinit var respeckChart: LineChart
     lateinit var thingyChart: LineChart
 
-    lateinit var classificationTextView: TextView
+    lateinit var wakefulTextView: TextView
+    lateinit var physicalTextView: TextView
+    lateinit var socialTextView: TextView
+    // **New TextView for TRY_3.tflite model**
+//    lateinit var physicalTextViewNew: TextView
 
-
-    // global broadcast receiver so we can unregister it
+    // Global broadcast receiver so we can unregister it
     lateinit var respeckLiveUpdateReceiver: BroadcastReceiver
     lateinit var thingyLiveUpdateReceiver: BroadcastReceiver
     lateinit var looperRespeck: Looper
     lateinit var looperThingy: Looper
 
+    lateinit var user_email: String
+
     val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
     val filterTestThingy = IntentFilter(Constants.ACTION_THINGY_BROADCAST)
 
-    @Throws(IOException::class)
-    private fun loadModelFile(tflite : String): MappedByteBuffer {
-        val MODEL_ASSETS_PATH = tflite
-        val assetFileDescrptor = this.assets.openFd(MODEL_ASSETS_PATH)
-        val fileInputStream = FileInputStream(assetFileDescrptor.getFileDescriptor())
-        val fileChannel = fileInputStream.getChannel()
-        val startOffset = assetFileDescrptor.startOffset
-        val declaredLength = assetFileDescrptor.getDeclaredLength()
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
-    }
+    // Model interpreters
+    lateinit var wakefulModel: Interpreter
+    lateinit var physicalModel: Interpreter
+    lateinit var socialModel: Interpreter
+    // **New Interpreter for TRY_3.tflite**
+    lateinit var physicalModelNew: Interpreter
 
     val noToString: Map<Int, String> = mapOf(
-        0 to "Sitting/ Standing",
-        1 to "Lying down on left",
-        2 to "Lying down of right",
-        3 to "Lying down on back",
-        4 to "Lying down on stomach",
-        5 to "walking",
-        6 to "running",
-        7 to "acending stairs",
-        8 to "descending staits",
+        0 to "ascending",
+        1 to "descending",
+        2 to "lying on back",
+        3 to "lying on left",
+        4 to "lying on right",
+        5 to "lying on stomach",
+        6 to "misc",
+        7 to "normal walking",
+        8 to "running",
         9 to "shuffle walking",
-        10 to "misc"
+        10 to "sitting / standing"
     )
+
+    val UPDATE_FREQUENCY = 2000 // in milliseconds
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_data)
 
+        val db = AppDatabase.getDatabase(applicationContext)
+        historyManager = db.activityHistoryManager()
+
+        user_email = intent.getStringExtra("user_email") ?: "No User"
+
+        Log.d("THINGY LIVE", Constants.ACTION_RESPECK_LIVE_BROADCAST)
+        Log.d("RESPECK LIVE", Constants.ACTION_THINGY_BROADCAST)
+
+        socialTextView = findViewById(R.id.socialTextView)
+        physicalTextView = findViewById(R.id.physicalTextView)
+        wakefulTextView = findViewById(R.id.wakefulTextView)
+        // **Initialize the new TextView**
+//        physicalTextViewNew = findViewById(R.id.physicalTextView)
         setupCharts()
 
-        classificationTextView = findViewById(R.id.classificationTextView)
+        Log.d("Preload tensor", "got here")
+        try {
+            wakefulModel = Interpreter(loadModelFile("TRY_2.tflite"))
+            physicalModel = Interpreter(loadModelFile("TRY_2.tflite"))
+            socialModel = Interpreter(loadModelFile("TRY_2.tflite"))
+            // **Load the new physical model**
+            physicalModelNew = Interpreter(loadModelFile("TRY_3.tflite"))
+        } catch (e: IOException) {
+            Log.e("ModelError", "Error loading models", e)
+        }
+        Log.d("Postload tensor", "got here")
+
+        // **2. Update the modelToTextBox map to include the new model and its normalization parameters**
+        val modelToTextBox: Map<Interpreter, Pair<TextView, NormalizationParams>> = mapOf(
+            wakefulModel to Pair(wakefulTextView, normalizationParamsTRY2),
+            physicalModel to Pair(physicalTextView, normalizationParamsTRY2),
+            socialModel to Pair(socialTextView, normalizationParamsTRY2),
+//            physicalModelNew to Pair(physicalTextViewNew, normalizationParamsTRY3) // New model and TextView
+        )
+
         val windowSize = 50  // Adjust based on model requirements
-        val sensorDataBuffer = ArrayList<FloatArray>() // To store sensor readings
-        var interpreter : Interpreter? = Interpreter(loadModelFile("model.tflite"))
+
+        respeckListener(windowSize, modelToTextBox)
+        thingyListener()
+    }
+
+    @Throws(IOException::class)
+    private fun loadModelFile(tflite: String): MappedByteBuffer {
+        val MODEL_ASSETS_PATH = tflite
+        val assetFileDescriptor = this.assets.openFd(MODEL_ASSETS_PATH)
+        val fileInputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
+        val fileChannel = fileInputStream.channel
+        val startOffset = assetFileDescriptor.startOffset
+        val declaredLength = assetFileDescriptor.declaredLength
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+    }
+
+    // **3. Modify the Normalization Function to accept dynamic parameters**
+    private fun normalize(
+        x: Float,
+        y: Float,
+        z: Float,
+        params: NormalizationParams
+    ): FloatArray {
+        val normalizedX = (x - params.mean[0]) / params.std[0]
+        val normalizedY = (y - params.mean[1]) / params.std[1]
+        val normalizedZ = (z - params.mean[2]) / params.std[2]
+        return floatArrayOf(normalizedX, normalizedY, normalizedZ)
+    }
+
+    // **4. Update the runModel function to accept normalization parameters**
+    fun runModel(
+        interpreter: Interpreter,
+        sensorData: Array<FloatArray>,
+        params: NormalizationParams
+    ): String {
+        // Normalize the sensor data
+        val normalizedData = sensorData.map { (x, y, z) ->
+            normalize(x, y, z, params)
+        }.toTypedArray()
+
+        val sensorDataShaped = arrayOf(normalizedData) // Shape: [1, window_size, 3]
+
+        Log.d("tensor shape", "${sensorDataShaped.size}, ${sensorDataShaped[0].size}, ${sensorDataShaped[0][0].size}")
+        Log.d("Running model", "Running model")
+
+        val outputArray = Array(1) { FloatArray(11) } // Adjusted to match [1, 11]
+        interpreter.run(sensorDataShaped, outputArray)
+
+        val outNo = outputArray[0].indices.maxByOrNull { outputArray[0][it] } ?: -1
+        val classification = noToString[outNo] ?: "Invalid activity number"
+
+        return classification
+    }
+
+    fun respeckListener(windowSize: Int, modelViewMap: Map<Interpreter, Pair<TextView, NormalizationParams>>) {
+        // Set up the broadcast receiver
         var lastExecutionTime = 0L
-//        for (i in 1..50){
-//            predictions.add(floatArrayOf(0.0734863281F, 0.0370483398F, (-3.40637207e-01).toFloat(),
-//                17.90625F, 33.171875F, 17.109375F))
-//        }
-
-        // set up the broadcast receiver
         respeckLiveUpdateReceiver = object : BroadcastReceiver() {
+            val sensorDataBuffer = ArrayList<FloatArray>() // To store raw sensor readings
+
             override fun onReceive(context: Context, intent: Intent) {
+                Log.d("receives data", "receives data")
+                if (intent.action == Constants.ACTION_RESPECK_LIVE_BROADCAST) {
 
-                //Log.i("thread", "I am running on thread = " + Thread.currentThread().name)
+                    val liveData = intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
 
-                val action = intent.action
-
-                if (action == Constants.ACTION_RESPECK_LIVE_BROADCAST) {
-
-                    val liveData =
-                        intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
-                    //Log.d("Live", "onReceive: liveData = " + liveData)
-
-                    // get all relevant intent contents
+                    // Get all relevant intent contents
                     val x = liveData.accelX
                     val y = liveData.accelY
                     val z = liveData.accelZ
-                    val gyro_x = liveData.gyro.x
-                    val gyro_y = liveData.gyro.y
-                    val gyro_z = liveData.gyro.z
 
-
-                    val reading = floatArrayOf(x, y, z,gyro_x,gyro_y,gyro_z)
-                    sensorDataBuffer.add(reading)
-
-                    if (sensorDataBuffer.size >= windowSize){
-                        // classify
-//                        classificationTextView.text = windowSize.toString()
+                    // Add raw data to the buffer
+                    sensorDataBuffer.add(floatArrayOf(x, y, z))
+                    Log.d("sensorDataBuffer", sensorDataBuffer.toString())
+                    if (sensorDataBuffer.size > windowSize) {
+                        Log.d("removing data", "removing data")
+                        sensorDataBuffer.removeAt(0)
+                    }
+                    Log.d("window size", sensorDataBuffer.size.toString())
+                    if (sensorDataBuffer.size == windowSize) {
+                        Log.d("correct window size", "correct window size")
                         val currentTime = System.currentTimeMillis()
-
-                        if (currentTime - lastExecutionTime >= 2000) {
+                        if (currentTime - lastExecutionTime >= UPDATE_FREQUENCY) {
                             lastExecutionTime = currentTime
-                            var outputArray = FloatArray(11)
-//                            Log.d("higg", sensorDataBuffer)
-                            interpreter!!.run(arrayOf(sensorDataBuffer.toTypedArray()), arrayOf(outputArray))
-
-                            var out_no = (outputArray.indices.maxByOrNull {outputArray[it]} ?: -1)
                             runOnUiThread {
-                                classificationTextView.text = noToString[out_no] ?: "Un"
+                                Log.d("UI thread", "UI Thread")
+                                // Prepare the input data
+                                val inputData = sensorDataBuffer.toTypedArray() // Shape: [window_size, 3]
+
+                                // Run each model with its corresponding normalization parameters
+                                modelViewMap.forEach { (model, pair) ->
+                                    val (textbox, params) = pair
+                                    val modelOutput = runModel(model, arrayOf(*inputData), params)
+                                    textbox.text = modelOutput
+                                    GlobalScope.launch(Dispatchers.IO) {
+                                        val dateFormat = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
+                                        val timestamp = dateFormat.format(Date())
+                                        Log.d(
+                                            "input data",
+                                            "Timestamp: $timestamp Email: $user_email Activity: $modelOutput"
+                                        )
+
+                                        try {
+                                            Log.d("Database entry", "Inserting activity log")
+                                            historyManager.insert(
+                                                ActivityLog(
+                                                    userEmail = user_email,
+                                                    activity = modelOutput,
+                                                    timeStamp = timestamp
+                                                )
+                                            )
+                                            Log.d("Database entry", "Activity log inserted")
+                                        } catch (e: Exception) {
+                                            Log.e("DatabaseError", "Error inserting activity log", e)
+                                        }
+                                    }
+                                }
                             }
                         }
-
-                        sensorDataBuffer.removeFirst()
                     }
 
-
-
                     time += 1
-                    updateGraph("respeck", x, y, z)
-
+                    updateGraph("respeck", x, y, z) // Visualizing raw data
                 }
             }
         }
 
-        // register receiver on another thread
-
+        // Register receiver on another thread
         val handlerThreadRespeck = HandlerThread("bgThreadRespeckLive")
         handlerThreadRespeck.start()
         looperRespeck = handlerThreadRespeck.looper
         val handlerRespeck = Handler(looperRespeck)
         this.registerReceiver(respeckLiveUpdateReceiver, filterTestRespeck, null, handlerRespeck)
+    }
 
-        /*
-        // set up the broadcast receiver
+    fun thingyListener() {
         thingyLiveUpdateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
 
@@ -178,29 +302,42 @@ class LiveDataActivity : AppCompatActivity() {
 
                     val liveData =
                         intent.getSerializableExtra(Constants.THINGY_LIVE_DATA) as ThingyLiveData
-                    Log.d("Live", "onReceive: liveData = " + liveData)
+                    Log.d("Live", "onReceive: liveData = $liveData")
 
-                    // get all relevant intent contents
+                    // Get all relevant intent contents
                     val x = liveData.accelX
                     val y = liveData.accelY
                     val z = liveData.accelZ
 
-                    time += 1
-                    updateGraph("thingy", x, y, z)
+                    // **Optional: Normalize the sensor data if needed**
+                    // If Thingy data is also used with the model, normalize it similarly
+                    // For demonstration, assuming Thingy data uses TRY_2 normalization
+                    val normalizedReading = normalize(x, y, z, normalizationParamsTRY2)
 
+                    time += 1
+                    updateGraph("thingy", x, y, z) // Visualizing raw data
+
+                    // If you plan to use Thingy data with the model, implement buffering and model inference here
+                    // Example:
+                    /*
+                    sensorDataBufferThingy.add(normalizedReading)
+                    if (sensorDataBufferThingy.size > windowSize) {
+                        sensorDataBufferThingy.removeAt(0)
+                    }
+                    if (sensorDataBufferThingy.size == windowSize) {
+                        // Similar model inference as respeckListener
+                    }
+                    */
                 }
             }
         }
-
-        // register receiver on another thread
+        // Register receiver on another thread
         val handlerThreadThingy = HandlerThread("bgThreadThingyLive")
         handlerThreadThingy.start()
         looperThingy = handlerThreadThingy.looper
         val handlerThingy = Handler(looperThingy)
         this.registerReceiver(thingyLiveUpdateReceiver, filterTestThingy, null, handlerThingy)
-        */
     }
-
 
     fun setupCharts() {
         respeckChart = findViewById(R.id.respeck_chart)
@@ -294,12 +431,14 @@ class LiveDataActivity : AppCompatActivity() {
     }
 
     fun updateGraph(graph: String, x: Float, y: Float, z: Float) {
-        // take the first element from the queue
-        // and update the graph with it
         if (graph == "respeck") {
             dataSet_res_accel_x.addEntry(Entry(time, x))
             dataSet_res_accel_y.addEntry(Entry(time, y))
             dataSet_res_accel_z.addEntry(Entry(time, z))
+
+            limitDataSetSize(dataSet_res_accel_x, MAX_DATA_SET_SIZE)
+            limitDataSetSize(dataSet_res_accel_y, MAX_DATA_SET_SIZE)
+            limitDataSetSize(dataSet_res_accel_z, MAX_DATA_SET_SIZE)
 
             runOnUiThread {
                 allRespeckData.notifyDataChanged()
@@ -313,6 +452,10 @@ class LiveDataActivity : AppCompatActivity() {
             dataSet_thingy_accel_y.addEntry(Entry(time, y))
             dataSet_thingy_accel_z.addEntry(Entry(time, z))
 
+            limitDataSetSize(dataSet_thingy_accel_x, MAX_DATA_SET_SIZE)
+            limitDataSetSize(dataSet_thingy_accel_y, MAX_DATA_SET_SIZE)
+            limitDataSetSize(dataSet_thingy_accel_z, MAX_DATA_SET_SIZE)
+
             runOnUiThread {
                 allThingyData.notifyDataChanged()
                 thingyChart.notifyDataSetChanged()
@@ -321,10 +464,13 @@ class LiveDataActivity : AppCompatActivity() {
                 thingyChart.moveViewToX(thingyChart.lowestVisibleX + 40)
             }
         }
-
-
     }
 
+    private fun limitDataSetSize(dataSet: LineDataSet, maxSize: Int) {
+        while (dataSet.entryCount > maxSize) {
+            dataSet.removeFirst()
+        }
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -332,5 +478,11 @@ class LiveDataActivity : AppCompatActivity() {
         unregisterReceiver(thingyLiveUpdateReceiver)
         looperRespeck.quit()
         looperThingy.quit()
+
+        // Close interpreters to free resources
+        wakefulModel.close()
+        physicalModel.close()
+        socialModel.close()
+        physicalModelNew.close() // Close the new interpreter
     }
 }

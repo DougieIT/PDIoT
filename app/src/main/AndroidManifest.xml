@@ -16,6 +16,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.NFC" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
@@ -53,6 +56,13 @@
                 <action android:name="com.specknet.pdiotapp.RESPECK_BROADCAST" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".authentication.LoginActivity" />
+        <activity android:name=".authentication.SignUpActivity" />
+
+        <activity android:name=".SelectionActivity" />
+
+
         <activity
             android:name=".barcode.BarcodeActivity"
             android:exported="true"
@@ -86,6 +96,10 @@
             android:name=".RecordingActivity"
             android:exported="true"
             android:screenOrientation="portrait" />
+
+        <activity android:name=".history.ViewHistoryActivity"
+            android:label="View History"
+            android:exported="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

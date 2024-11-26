@@ -1,4 +1,4 @@
-package com.specknet.pdiotapp.database
+package com.specknet.pdiotapp.authentication
 
 import android.content.Intent
 import android.os.Bundle
@@ -16,12 +16,16 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.specknet.pdiotapp.R
+import com.specknet.pdiotapp.SelectionActivity
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var username: EditText
     private lateinit var password: EditText
     private lateinit var mAuth: FirebaseAuth
     private lateinit var signUpButton: Button
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d("loginpage", "loginpage")
@@ -83,6 +87,11 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign-in success
                     Log.d("FirebaseAuth", "signInWithEmail:success")
+                    val intent = Intent(this, SelectionActivity::class.java)
+                    intent.putExtra("user_email", FirebaseAuth.getInstance().toString())
+                    startActivity(intent)
+                    //finish()
+
                     // You can use `user` to access user-specific information
                 } else {
                     // Sign-in failure
@@ -91,7 +100,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
         val user = FirebaseAuth.getInstance().currentUser
-        updateUI(user)
+        //updateUI(user)
         return user
     }
 
@@ -99,8 +108,7 @@ class LoginActivity : AppCompatActivity() {
         Log.d("updateUII", user.toString())
         if (user != null) {
             // User is logged in, navigate to main page
-            Log.d("back to main", "")
-            //startActivity(Intent(this, MainActivity::class.java))
+            startActivity(Intent(this, SelectionActivity::class.java))
             finish()
         } else {
             // User not logged in, clear input fields
@@ -121,7 +129,7 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign-in success
                     Log.d("FirebaseAuth", "signInWithEmail:success")
-                    val user = auth.currentUser
+                    auth.currentUser
                     // You can use `user` to access user-specific information
                 } else {
                     // Sign-in failure

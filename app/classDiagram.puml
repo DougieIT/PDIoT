@@ -1,11 +1,15 @@
 @startuml
-'https://plantuml.com/sequence-diagram
+class User {
+    - id: int
+    - name: String
+    + login(): void
+}
 
-autonumber
+class Post {
+    - id: int
+    - content: String
+    + publish(): void
+}
 
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
-
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
+User "1" --> "*" Post: creates
 @enduml
