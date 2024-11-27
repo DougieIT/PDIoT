@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PDIoT J1</string>
+    <string name="app_name">Respeck</string>
     <string name="ble_name">Name: %1$s</string>
     <string name="ble_mac">MAC: %1$s</string>
     <string name="ble_signal">Signal: %1$d</string>
@@ -17,7 +17,7 @@
     <string name="title_activity_tab_animation">Tabs Animation</string>
     <string name="title_activity_sticky_view">StickyViewActivity</string>
 
-    <string name="section_bluetooth">Welcome to the PDIoT App. Use it to connect to your Respeck or Thingy devices.</string>
+    <string name="section_bluetooth">Welcome to the Respeck App. Use it to connect to your Respeck or Thingy devices.</string>
     <string name="section_record">You can record data from the sensors in a locally stored csv file.</string>
     <string name="section_live">You can also view the live data once the sensors are connected.</string>
     <string name="section_bluetooth_title">Connect</string>
@@ -52,4 +52,5 @@
     <string name="thingy_accel">Accel = (%1$.3f, %2$.3f, %3$.3f)</string>
     <string name="thingy_gyro">Gyro = (%1$.3f, %2$.3f, %3$.3f)</string>
     <string name="thingy_mag">Mag = (%1$.3f, %2$.3f, %3$.3f)</string>
+    <string name="password_input">as</string>
 </resources>

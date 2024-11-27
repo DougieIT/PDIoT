@@ -1,25 +1,41 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/amber</item>
-        <item name="colorPrimaryDark">@color/brown</item>
-        <item name="colorAccent">@color/colorAccent</item>
+<!--    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">-->
+<!--        &lt;!&ndash; Primary brand color. &ndash;&gt;-->
+<!--        <item name="colorPrimary">@color/colorPrimary</item>-->
+<!--        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>-->
+<!--        <item name="colorSecondary">@color/colorSecondary</item>-->
+<!--        <item name="colorOnPrimary">@android:color/white</item> &lt;!&ndash; Ensures text on primary color is readable &ndash;&gt;-->
+<!--        <item name="colorOnSecondary">@android:color/black</item> &lt;!&ndash; Ensures text on secondary color is readable &ndash;&gt;-->
+
+<!--        &lt;!&ndash; Customize your theme here. &ndash;&gt;-->
+<!--        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.MyApp.CutCorners</item>-->
+<!--        <item name="materialButtonStyle">@style/Widget.MyApp.Button</item>-->
+<!--        <item name="android:windowBackground">@color/background</item> &lt;!&ndash; Sets the background color &ndash;&gt;-->
+<!--    </style>-->
+
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Existing items -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorOnSecondary">@android:color/black</item>
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.MyApp.CutCorners</item>
         <item name="materialButtonStyle">@style/Widget.MyApp.Button</item>
-
+        <item name="android:windowBackground">@color/background</item>
     </style>
 
+    <!-- Custom Button Style -->
     <style name="Widget.MyApp.Button" parent="Widget.MaterialComponents.Button">
         <item name="shapeAppearance">@style/ShapeAppearance.MyApp.CutCorners</item>
         <item name="backgroundTint">@color/colorPrimary</item>
         <item name="android:textColor">?attr/colorOnPrimary</item>
     </style>
 
+    <!-- Custom Shape Appearance -->
     <style name="ShapeAppearance.MyApp.CutCorners" parent="ShapeAppearance.MaterialComponents.MediumComponent">
         <item name="cornerFamily">cut</item>
         <item name="cornerSize">8dp</item>
     </style>
-
-
 </resources>

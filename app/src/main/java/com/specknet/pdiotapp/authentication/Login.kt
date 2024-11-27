@@ -48,8 +48,8 @@ class LoginActivity : AppCompatActivity() {
         val signInButton: Button = findViewById(R.id.loginButton)
         //  val resetText: TextView = findViewById(R.id.textView_reset)
         //  val signUp: TextView = findViewById(R.id.)
-        username = findViewById(R.id.emailTxtBox)
-        password = findViewById(R.id.passwordTextBox)
+        username = findViewById(R.id.emailEditText)
+        password = findViewById(R.id.passwordEditText)
         Log.d("here2", "here2")
 
 

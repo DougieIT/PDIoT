@@ -1,55 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">@color/accent_500</color>
-    <color name="colorPrimaryDark">@color/accent_700</color>
-    <color name="colorAccent">#03DAC5</color>
+    <!-- Primary and Accent Colors from New Palette -->
+    <color name="colorPrimary">#FF5252</color> <!-- Picton Blue -->
+    <color name="colorPrimaryDark">#3949AB</color> <!-- Federal Blue -->
+    <color name="colorAccent">#f25757</color> <!-- Bittersweet -->
 
-    <!-- Chart colors -->
-    <!--    <color name="red">#FF595E</color>-->
-    <!--    <color name="green">#8ac926</color>-->
-    <!--    <color name="blue">#1982c4</color>-->
-    <!--    <color name="yellow">#ffca3a</color>-->
-    <!--    <color name="purple">#6a4c93</color>-->
+    <!-- Secondary Color from New Palette -->
+    <color name="colorSecondary">#9c528b</color> <!-- Plum -->
 
-    <!-- Design colors -->
-    <color name="indicator_unselected">#4D000000</color>
+    <!-- Background Color from New Palette -->
+    <color name="background">#fefeff</color> <!-- White -->
 
-    <!--Indigo 500-->
-    <color name="primary_500">#3F51B5</color>
-    <!--Indigo 700-->
-    <color name="primary_700">#303F9F</color>
-    <!--Pink 500-->
-    <color name="accent_500">#E91E63</color>
-    <!--Pink 700-->
-    <color name="accent_700">#C2185B</color>
-    <color name="black_trans80">#33000000</color>
+    <!-- Divider Color -->
+    <color name="divider">#E0E0E0</color> <!-- Retained -->
 
+    <!-- Gray Color -->
+    <color name="gray">#757575</color> <!-- Retained -->
 
-    <color name="blue_grey">#455A64</color>
-    <color name="red">#F44336</color>
-    <color name="pink">#E91E63</color>
-    <color name="purple">#9C27B0</color>
-    <color name="deep_purple">#673AB7</color>
-    <color name="indigo">#3F51B5</color>
-    <color name="blue">#2196F3</color>
-    <color name="light_blue">#03A9F4</color>
-    <color name="cyan">#00BCD4</color>
-    <color name="teal">#009688</color>
-    <color name="green">#4CAF50</color>
-    <color name="light_green">#8BC34A</color>
-    <color name="lime">#CDDC39</color>
-    <color name="yellow">#FFEB3B</color>
-    <color name="amber">#FFC107</color>
-    <color name="orange">#FF9800</color>
-    <color name="deep_orange">#FF5722</color>
-    <color name="brown">#795548</color>
-    <color name="grey">#E0E0E0</color>
+    <!-- Existing Colors -->
+    <color name="indicator_unselected">#4D000000</color> <!-- Retained -->
 
-    <color name="white_70">#B3FFFFFF</color>
+    <!-- Indigo 500 -->
+    <color name="primary_500">#3F51B5</color> <!-- Retained -->
+    <!-- Indigo 700 -->
+    <color name="primary_700">#303F9F</color> <!-- Retained -->
+    <!-- Pink 500 -->
+    <color name="accent_500">#E91E63</color> <!-- Retained -->
+    <!-- Pink 700 -->
+    <color name="accent_700">#C2185B</color> <!-- Retained -->
+    <color name="black_trans80">#33000000</color> <!-- Retained -->
 
-    <color name="white_40">#66FFFFFF</color>
+    <color name="blue_grey">#455A64</color> <!-- Retained -->
+    <color name="red">#F44336</color> <!-- Retained -->
+    <color name="pink">#E91E63</color> <!-- Retained -->
+    <color name="purple">#9C27B0</color> <!-- Retained -->
+    <color name="deep_purple">#673AB7</color> <!-- Retained -->
+    <color name="indigo">#3F51B5</color> <!-- Retained -->
+    <color name="blue">#2196F3</color> <!-- Retained -->
+    <color name="light_blue">#03A9F4</color> <!-- Retained -->
+    <color name="cyan">#00BCD4</color> <!-- Retained -->
+    <color name="teal">#009688</color> <!-- Retained -->
+    <color name="green">#4CAF50</color> <!-- Retained -->
+    <color name="light_green">#8BC34A</color> <!-- Retained -->
+    <color name="lime">#CDDC39</color> <!-- Retained -->
+    <color name="yellow">#FFEB3B</color> <!-- Retained -->
+    <color name="amber">#FFC107</color> <!-- Retained -->
+    <color name="orange">#FF9800</color> <!-- Retained -->
+    <color name="deep_orange">#FF5722</color> <!-- Retained -->
+    <color name="brown">#795548</color> <!-- Retained -->
+    <color name="grey">#E0E0E0</color> <!-- Retained -->
 
-    <color name="cyan_50">#E0F7FA</color>
-    <color name="amber_50">#FFF8E1</color>
-    <color name="purple_50">#F3E5F5</color>
+    <color name="white_70">#B3FFFFFF</color> <!-- Retained -->
+    <color name="white_40">#66FFFFFF</color> <!-- Retained -->
+
+    <color name="cyan_50">#E0F7FA</color> <!-- Retained -->
+    <color name="amber_50">#FFF8E1</color> <!-- Retained -->
+    <color name="purple_50">#F3E5F5</color> <!-- Retained -->
+
+    <!-- New Palette Colors (Optional for Direct Use) -->
+    <color name="White_New">#fefeff</color>
+    <color name="Picton_Blue">#01a4e9</color>
+    <color name="Federal_Blue">#0a014f</color>
+    <color name="Bittersweet">#f25757</color>
+    <color name="Plum">#9c528b</color>
 </resources>
