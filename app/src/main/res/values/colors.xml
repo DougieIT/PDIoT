@@ -17,6 +17,9 @@
     <!-- Gray Color -->
     <color name="gray">#757575</color> <!-- Retained -->
 
+    <!-- Black Color -->
+    <color name="black">#000000</color> <!-- Retained -->
+
     <!-- Existing Colors -->
     <color name="indicator_unselected">#4D000000</color> <!-- Retained -->
 
