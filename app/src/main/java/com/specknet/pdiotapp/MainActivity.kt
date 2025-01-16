@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -15,16 +14,15 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.material.snackbar.Snackbar
-import com.specknet.pdiotapp.bluetooth.BluetoothSpeckService
-import com.specknet.pdiotapp.bluetooth.ConnectingActivity
 import com.specknet.pdiotapp.authentication.LoginActivity
-import com.specknet.pdiotapp.live.LiveDataActivity
+import com.specknet.pdiotapp.bluetooth.BluetoothSpeckService
 import com.specknet.pdiotapp.onboarding.OnBoardingActivity
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.Utils
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.coordinatorLayout
 
 class MainActivity : AppCompatActivity() {
 
@@ -47,27 +45,16 @@ class MainActivity : AppCompatActivity() {
     // broadcast receiver
     val filter = IntentFilter()
 
-    var isUserFirstTime = true
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // check whether the onboarding screen should be shown
-        val sharedPreferences =
-            getSharedPreferences(Constants.PREFERENCES_FILE, Context.MODE_PRIVATE)
-        if (isUserFirstTime) {
-            Log.d("debug", "FIRST TIME LOGIN")
-            val loginIntent = Intent(this, LoginActivity::class.java)
-            startActivity(loginIntent)
-            //finish() // Optional: Close MainActivity so the user can’t return to it
-            isUserFirstTime = false
-        } else {
-            isUserFirstTime = true
-            sharedPreferences.edit().putBoolean(Constants.PREF_USER_FIRST_TIME, false).apply()
-            val introIntent = Intent(this, OnBoardingActivity::class.java)
-            startActivity(introIntent)
-        }
+        Log.d("UI FLOW:", "MAIN")
+
+        val loginIntent = Intent(this, LoginActivity::class.java)
+        startActivity(loginIntent)
+
+
 
 
         permissionAlertDialog = AlertDialog.Builder(this)

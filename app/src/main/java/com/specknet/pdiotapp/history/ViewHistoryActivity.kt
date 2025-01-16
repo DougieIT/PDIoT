@@ -1,28 +1,29 @@
 package com.specknet.pdiotapp.history
-
-
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CalendarView
-import android.widget.Spinner
-import android.widget.ArrayAdapter
 import android.widget.PopupWindow
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
-import com.specknet.pdiotapp.R
 import androidx.lifecycle.lifecycleScope
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.utils.ColorTemplate
+import com.google.android.material.textfield.TextInputEditText
+import com.specknet.pdiotapp.R
 import com.specknet.pdiotapp.database.ActivityHistoryManager
 import com.specknet.pdiotapp.database.ActivityLog
 import com.specknet.pdiotapp.database.AppDatabase
@@ -31,21 +32,50 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.PI
-import kotlin.math.sin
 import kotlin.random.Random
 
 class ViewHistoryActivity : AppCompatActivity() {
 
-    private lateinit var showCalendarButton: Button
+    private lateinit var showCalendarButton: TextInputEditText
     private lateinit var calendarView: CalendarView
     private lateinit var activitySpinner: Spinner
-    private lateinit var barChart: BarChart
+    private lateinit var lineChart: LineChart
+    private lateinit var pieChart : PieChart
     private var calendarPopup: PopupWindow? = null
     private lateinit var database: AppDatabase
     private lateinit var activityHistoryManager: ActivityHistoryManager
     private var selectedActivity: String = ""
     private var selectedDate: String = ""
+
+    val database_activities = listOf(
+        "sitting/ Standing",       // Index 0
+        "lying down on left",      // Index 1
+        "lying down on right",     // Index 2
+        "lying down on back",      // Index 3
+        "lying down on stomach",   // Index 4
+        "walking",                 // Index 5
+        "running",                 // Index 6
+        "ascending stairs",        // Index 7
+        "descending stairs",       // Index 8
+        "shuffle walking",         // Index 9
+        "misc"                     // Index 10
+    )
+    val display_activities = listOf(
+        "Sitting or Standing",       // Index 0
+        "Lying on Left",             // Index 1
+        "Lying on Right",            // Index 2
+        "Lying on Back",             // Index 3
+        "Lying on Stomach",          // Index 4
+        "Walking",                   // Index 5
+        "Running",                   // Index 6
+        "Ascending Stairs",          // Index 7
+        "Descending Stairs",         // Index 8
+        "Shuffle Walking",           // Index 9
+        "Misc"                       // Index 10
+    )
+    val displayToActivity = display_activities.zip(database_activities).toMap()
+    val activityToDisplay = database_activities.zip(display_activities).toMap()
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,15 +83,17 @@ class ViewHistoryActivity : AppCompatActivity() {
         setContentView(R.layout.activity_view_history)
 
         // Initialize UI components
-        showCalendarButton = findViewById(R.id.showCalendarButton)
+        showCalendarButton = findViewById(R.id.dateInputBox)
         activitySpinner = findViewById(R.id.activitySpinner)
-        barChart = findViewById(R.id.barChart)
+        lineChart = findViewById(R.id.lineChart)
+        pieChart = findViewById(R.id.pieChart)
 
         // Set up Spinner (Dropdown)
         setupSpinner()
 
         // Set up BarChart with sample data
-        setupBarChart()
+        setupLineChart()
+        setupPieChart(pieChart)
 
         database = AppDatabase.getDatabase(this)
         activityHistoryManager = database.activityHistoryManager()
@@ -107,8 +139,11 @@ class ViewHistoryActivity : AppCompatActivity() {
         val calendarView: CalendarView = popupView.findViewById(R.id.popupCalendarView)
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             selectedDate = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
+            showCalendarButton.setText(selectedDate)
 
             barChartData(selectedDate,selectedActivity)
+            piChartData(selectedDate)
+
             Toast.makeText(this, "Selected Date: $selectedDate", Toast.LENGTH_SHORT).show()
             calendarPopup?.dismiss()
         }
@@ -128,23 +163,12 @@ class ViewHistoryActivity : AppCompatActivity() {
 
     private fun setupSpinner() {
         // List of activities for the dropdown
-        val activities = listOf(
-            "sitting/ Standing",       // Index 0
-            "lying down on left",      // Index 1
-            "lying down on right",     // Index 2
-            "lying down on back",      // Index 3
-            "lying down on stomach",   // Index 4
-            "walking",                 // Index 5
-            "running",                 // Index 6
-            "ascending stairs",        // Index 7
-            "descending stairs",       // Index 8
-            "shuffle walking",         // Index 9
-            "misc"                     // Index 10
-        )
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, activities)
+
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, display_activities)
         activitySpinner.adapter = adapter
 
-        selectedActivity = activities[0]
+        selectedActivity = display_activities[0]
 
         // Handle Spinner item selection
         activitySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -155,8 +179,10 @@ class ViewHistoryActivity : AppCompatActivity() {
                 position: Int,
                 id: Long
             ) {
-                selectedActivity = activities[position]
-                barChartData(selectedDate,selectedActivity)
+                selectedActivity = database_activities[position]
+                Log.d("SELECTED ACTIVITY", selectedActivity.toString())
+                barChartData(selectedDate, selectedActivity)
+                selectedActivity = activityToDisplay[selectedActivity].toString()
 
                 Toast.makeText(
                     this@ViewHistoryActivity,
@@ -172,7 +198,7 @@ class ViewHistoryActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupBarChart() {
+    private fun setupLineChart() {
         // Sample data for BarChart
         val entries = listOf(
             BarEntry(1f, 30f), // Example: Day 1, 30 units of activity
@@ -180,86 +206,178 @@ class ViewHistoryActivity : AppCompatActivity() {
             BarEntry(3f, 40f)  // Example: Day 3, 40 units of activity
         )
 
-        val dataSet = BarDataSet(entries, "Activity Data")
-        val barData = BarData(dataSet)
-        barChart.data = barData
-        barChart.description.text = "Activity History"
-        barChart.invalidate() // Refresh the chart
+        val dataSet = LineDataSet(entries, "Activity Data")
+        val lineData = LineData(dataSet)
+        lineData.setDrawValues(false)
+        dataSet.setDrawCircles(false)
+        dataSet.lineWidth = 3f
+        lineChart.data = lineData
+        dataSet.label = activityToDisplay[dataSet.label]
+        lineChart.description.text = "Time of Day"
+        lineChart.description.textSize = 12f
+        lineChart.xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                val hour = value.toInt() / 2 // Assuming 2 points per hour
+                val minute = if (value.toInt() % 2 == 0) "00" else "30"
+                return String.format("%02d:%s", hour, minute)
+            }
+        }
+        lineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM // Position labels at the bottom
+        lineChart.xAxis.granularity = 1f // Minimum interval between labels
+        lineChart.xAxis.labelCount = 6 // Display 6 labels
+
+        lineChart.description.text = "Activity History"
+
+        lineChart.invalidate() // Refresh the chart
+    }
+
+    private fun setupPieChart(pieChart: PieChart) {
+        val pieEntries = listOf(
+        com.github.mikephil.charting.data.PieEntry(40f, "Walking"),
+        com.github.mikephil.charting.data.PieEntry(30f, "Running"),
+        com.github.mikephil.charting.data.PieEntry(20f, "Sitting"),
+        com.github.mikephil.charting.data.PieEntry(10f, "Misc")
+        )
+
+        val pieDataSet = com.github.mikephil.charting.data.PieDataSet(pieEntries, "Activity Distribution")
+        pieDataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
+
+        val pieData = com.github.mikephil.charting.data.PieData(pieDataSet)
+
+        pieChart.data = pieData
+        pieChart.description.textSize = 16f
+        pieChart.setCenterTextSize(18f)
+        pieChart.setEntryLabelTextSize(16f)
+
+        // Remove the legend from the PieChart
+        pieChart.legend.isEnabled = false
+        pieChart.description.isEnabled = false
+
+        pieChart.invalidate()
+
+        pieChart.data = pieData
+        pieChart.description.text = "Activity Distribution"
+        pieChart.centerText = "Activities"
+        pieChart.invalidate() // Refresh the chart
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun barChartData(date : String, activity : String){
+    private fun barChartData(date: String, activity: String) {
         lifecycleScope.launch {
             val email = "user@pdiot.com"
+            Log.d("DATABASE QUERY", activity)
             val display_data = activityHistoryManager.getUserActivityOnDate(email, date, activity)
-            Log.d("Database query", email +  ", " + date + ", " + activity)
-            Log.d("Database display_data",display_data.toString())
-            val intervalCounts = MutableList(48) { 0 }
 
-// 2. Define the date formatter
+            val intervalCounts = MutableList(48) { 0 }
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-// 3. Process each ActivityLog entry
             for (log in display_data) {
                 val dateTime = LocalDateTime.parse(log.timeStamp, formatter)
                 val hour = dateTime.hour
-                val minute = dateTime.minute
-
-                val intervalIndex = hour * 2 + if (minute >= 30) 1 else 0
-                intervalCounts[intervalIndex] += 1
+                val minute = if (dateTime.minute >= 30) 1 else 0
+                val intervalIndex = hour * 2 + minute
+                intervalCounts[intervalIndex]++
             }
 
-// 4. Create BarEntry objects
-            val entries = mutableListOf<BarEntry>()
+            // Find the peak value in intervalCounts for normalization
+            val maxY = intervalCounts.maxOrNull() ?: 1 // Avoid division by zero
+
+            // Refresh LineChart
+            val lineEntries = mutableListOf<com.github.mikephil.charting.data.Entry>()
             for (i in intervalCounts.indices) {
-                val count = intervalCounts[i]
-                entries.add(BarEntry(i.toFloat(), count.toFloat()))
+                val normalizedValue = (intervalCounts[i].toFloat() / maxY) * 100 // Normalize to percentage
+                lineEntries.add(com.github.mikephil.charting.data.Entry(i.toFloat(), normalizedValue))
             }
 
-// 5. Create BarDataSet
-            val dataSet = BarDataSet(entries, activity)
-            dataSet.setDrawValues(false)
+            val lineDataSet = LineDataSet(lineEntries, "")
+            lineDataSet.setDrawValues(false)
+            lineDataSet.setDrawCircles(false)
+            lineDataSet.lineWidth = 3f
 
-// 6. Configure the BarDataSet (optional)
+            lineChart.data = LineData(lineDataSet)
 
+            // Remove legend for the line chart
+            lineChart.legend.isEnabled = false
+            lineChart.xAxis.textSize = 16f
+            lineChart.axisLeft.textSize = 16f
+            lineChart.legend.textSize = 14f
+            lineChart.description.textSize = 14f
 
-// 7. Create BarData and set it to the chart
-            val barData = BarData(dataSet)
+            lineChart.setExtraOffsets(0f, 0f, 0f, 8f)
 
-// Adjust the bar width
-            barData.barWidth = 0.9f // make the bar wider
-
-// 8. Set up the BarChart view
-            val barChart = findViewById<BarChart>(R.id.barChart)
-            barChart.data = barData
-            barChart.setFitBars(true) // make the x-axis fit exactly all bars
-
-// 9. Create labels for x-axis
-            val intervalLabels = mutableListOf<String>()
-            for (i in 0 until 48) {
-                val hour = i / 2
-                val minute = if (i % 2 == 0) "00" else "30"
-                intervalLabels.add(String.format("%02d:%s", hour, minute))
+            // Configure the X-axis (Time Labels)
+            lineChart.xAxis.apply {
+                valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String {
+                        val hour = (value.toInt() / 2).toString().padStart(2, '0')
+                        val minute = if (value.toInt() % 2 == 0) "00" else "30"
+                        return "$hour:$minute"
+                    }
+                }
+                granularity = 1f
+                position = XAxis.XAxisPosition.BOTTOM
             }
 
-// 10. Configure x-axis labels
-            val xAxis = barChart.xAxis
-            xAxis.valueFormatter = IndexAxisValueFormatter(intervalLabels)
-            xAxis.position = XAxis.XAxisPosition.BOTTOM
-            xAxis.setDrawGridLines(false)
-            xAxis.granularity = 1f
-            xAxis.labelCount = 12 // Adjust for label density
+            // Configure the Y-axis label
+            lineChart.axisLeft.apply {
+                valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String {
+                        return "${value.toInt()}%" // Format as percentage
+                    }
+                }
+                axisMinimum = 0f // Start Y-axis at 0
+                axisMaximum = 100f // End Y-axis at 100%
+                granularity = 10f // Label interval
+            }
 
-// Optional: Configure other chart properties
-            barChart.axisRight.isEnabled = false
-            barChart.description.isEnabled = false
-            barChart.legend.isEnabled = true
+            // Remove right axis for clarity
+            lineChart.axisRight.isEnabled = false
+            lineChart.description.isEnabled = false
 
-// 11. Refresh the chart
-            barChart.invalidate()
+            lineChart.invalidate()
+
+            // Refresh PieChart
+
         }
-
     }
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun piChartData(date:String) {
+        lifecycleScope.launch {
+            val email = "user@pdiot.com"
+            val display_data = activityHistoryManager.getAllDataOnDate(email, date)
+
+            val activityCounts = mutableMapOf<String, Int>()
+            for (log in display_data) {
+                activityCounts[log.activity] = activityCounts.getOrDefault(log.activity, 0) + 1
+            }
+
+            val pieEntries = mutableListOf<com.github.mikephil.charting.data.PieEntry>()
+            for ((activity, count) in activityCounts) {
+                pieEntries.add(com.github.mikephil.charting.data.PieEntry(count.toFloat(), activity))
+            }
+
+            val pieDataSet = com.github.mikephil.charting.data.PieDataSet(pieEntries, "Distribution")
+            pieDataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
+
+            pieDataSet.setDrawValues(false)
+
+            val pieData = com.github.mikephil.charting.data.PieData(pieDataSet)
+
+            pieChart.data = pieData
+            pieChart.description.textSize = 16f
+            pieChart.setCenterTextSize(18f)
+            pieChart.setEntryLabelTextSize(16f)
+
+            // Remove the legend from the PieChart
+            pieChart.legend.isEnabled = false
+            pieChart.description.isEnabled = false
+
+            pieChart.invalidate()
+        }
+    }
+
 
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -299,12 +417,16 @@ class ViewHistoryActivity : AppCompatActivity() {
                 // Calculate the time elapsed since start time in seconds
                 val elapsedSeconds = java.time.Duration.between(startTime, timestamp).seconds
 
-                // Calculate the probability using a sine function
+                // Calculate the time fraction relative to the total duration
                 val timeFraction = elapsedSeconds.toDouble() / totalDurationSeconds.toDouble()
-                val probability = sin(PI * timeFraction)
 
-                // Normalize probability to [0,1] range
-                val normalizedProbability = (probability + 0) / 1.0  // Since sin(0 to PI) ranges from 0 to 1
+                // Shift the distribution to peak around 75% of the duration
+                val targetFraction = 1 // Peak at 75%
+                val distanceFromTarget = kotlin.math.abs(timeFraction - targetFraction)
+                val probability = 1 - distanceFromTarget // Higher probability near the targetFraction
+
+                // Ensure the probability is in the range [0, 1]
+                val normalizedProbability = probability.coerceIn(0.0, 1.0)
 
                 // Introduce randomness
                 val randomValue = Random.nextFloat()
@@ -319,6 +441,7 @@ class ViewHistoryActivity : AppCompatActivity() {
                     dataToInsert.add(activityLog)
                 }
             }
+
 
             // Insert data into the database
             try {

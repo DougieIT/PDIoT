@@ -20,14 +20,16 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:padding="16dp">
+        android:padding="32dp">
 
         <!-- Email Field Layout -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            >
 
             <EditText
                 android:id="@+id/emailTextBox"
@@ -36,6 +38,13 @@
                 android:layout_weight="1"
                 android:hint="Email"
                 android:inputType="text" />
+            <ImageView
+                android:id="@+id/emailIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Email Icon"
+                android:src="@drawable/email" />
         </LinearLayout>
 
         <!-- Password Field Layout -->
@@ -43,6 +52,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:gravity="center_vertical"
+
             android:layout_marginBottom="8dp">
 
             <EditText
@@ -52,6 +63,13 @@
                 android:layout_weight="1"
                 android:hint="Password"
                 android:inputType="textPassword" />
+            <ImageView
+                android:id="@+id/passIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Email Icon"
+                android:src="@drawable/password" />
 
         </LinearLayout>
 
@@ -60,6 +78,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_marginBottom="16dp">
 
             <EditText
@@ -69,22 +88,38 @@
                 android:layout_weight="1"
                 android:hint="Confirm Password"
                 android:inputType="textPassword" />
+            <ImageView
+                android:id="@+id/pass2Icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Email Icon"
+                android:src="@drawable/password" />
 
         </LinearLayout>
 
         <!-- Buttons Layout -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+
+            >
         <Button
             android:id="@+id/signUpBtn"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sign Up"
             android:layout_marginBottom="8dp" />
 
         <Button
             android:id="@+id/cancelButton"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
+
             android:layout_height="wrap_content"
             android:text="Cancel" />
+        </LinearLayout>
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

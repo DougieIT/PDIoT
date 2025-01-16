@@ -52,11 +52,12 @@
 
                     <EditText
                         android:id="@+id/respeck_code"
-                        android:layout_width="wrap_content"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
+
                         android:ems="10"
-                        android:inputType="textPersonName"
-                        android:hint="Enter Respeck ID"/>
+                        android:hint="Enter Respeck ID"
+                        android:inputType="textPersonName" />
 
                     <Button
                         android:id="@+id/scan_respeck"

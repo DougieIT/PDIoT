@@ -109,6 +109,8 @@ public class BluetoothSpeckService extends Service {
     @Override
     public void onCreate() {
         Log.d(TAG, "onCreate: here");
+        Log.d("UI FLOW:", "BLUE TOOTH");
+
         super.onCreate();
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O)
             startMyOwnForeground();

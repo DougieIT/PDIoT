@@ -15,6 +15,9 @@ interface ActivityHistoryManager {
     @Query("SELECT * FROM activity_log WHERE userEmail = :email AND timeStamp LIKE :selectedDate || '%' AND activity = :activity")
     suspend fun getUserActivityOnDate(email: String, selectedDate: String, activity: String): List<ActivityLog>
 
+    @Query("SELECT * FROM activity_log WHERE userEmail = :email AND timeStamp LIKE :selectedDate || '%'")
+    suspend fun getAllDataOnDate(email: String, selectedDate: String) : List<ActivityLog>
+
     suspend fun insertSampleData() {
 
         val sampleData = listOf(

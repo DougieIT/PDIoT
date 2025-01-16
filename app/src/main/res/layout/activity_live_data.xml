@@ -1,155 +1,182 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".live.LiveDataActivity">
 
-    <!-- New LinearLayout for Classification Result -->
-
-    <!-- Respeck Graphs LinearLayout -->
+    <!-- Classification Layout -->
     <LinearLayout
         android:id="@+id/classification_layout"
         android:layout_width="416dp"
-        android:layout_height="176dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:orientation="vertical"
         android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <!-- Wakefulness Row -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:orientation="horizontal" >
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
 
+            <!-- Icon -->
+            <ImageView
+                android:id="@+id/wakefulnessIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/wakefullness"
+                android:contentDescription="Wakefulness Icon"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Input and Status -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1">
 
-                <TextView
-                    android:id="@+id/textView11"
-                    android:layout_width="52dp"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/wakefulnessInput"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Wakfulness" />
+                    android:hint="Wakefulness" />
 
                 <TextView
                     android:id="@+id/wakefulTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="No sensors connected" />
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Physical Row -->
         <LinearLayout
-            android:layout_width="409dp"
-            android:layout_height="52dp"
-            android:orientation="vertical">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="8dp">
 
+            <!-- Icon -->
+            <ImageView
+                android:id="@+id/physicalIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/physical"
+                android:contentDescription="Physical Icon"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Input and Status -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1">
 
-                <LinearLayout
-                    android:layout_width="384dp"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/physicalInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Physical" />
 
-                    <TextView
-                        android:id="@+id/textView16"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Physical" />
-
-                    <TextView
-                        android:id="@+id/physicalTextView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="No sensors connected" />
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/physicalTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No sensors connected" />
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Social Row -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="8dp">
 
+            <!-- Icon -->
+            <ImageView
+                android:id="@+id/socialIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/social"
+                android:contentDescription="Social Icon"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Input and Status -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1">
 
-                <TextView
-                    android:id="@+id/textView18"
-                    android:layout_width="54dp"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/socialInput"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Social" />
+                    android:hint="Social" />
 
                 <TextView
                     android:id="@+id/socialTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="No sensors connected" />
             </LinearLayout>
         </LinearLayout>
-
     </LinearLayout>
 
+    <!-- Respeck Graphs Section -->
     <LinearLayout
+        android:id="@+id/respeck_graphs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:id="@+id/respeck_graphs"
+        android:padding="16dp"
         app:layout_constraintTop_toBottomOf="@id/classification_layout"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/thingy_graphs">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Respeck Live Data"/>
+            android:text="Respeck Live Data" />
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/respeck_chart"
             android:layout_width="match_parent"
-            android:layout_height="200dp"/>
-
+            android:layout_height="100dp" />
     </LinearLayout>
 
-    <!-- Thingy Graphs LinearLayout -->
+    <!-- Thingy Graphs Section -->
     <LinearLayout
+        android:id="@+id/thingy_graphs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
         app:layout_constraintTop_toBottomOf="@id/respeck_graphs"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:id="@+id/thingy_graphs"
-        android:orientation="vertical">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Thingy Live Data"/>
+            android:text="Thingy Live Data" />
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/thingy_chart"
             android:layout_width="match_parent"
-            android:layout_height="200dp" />
-
+            android:layout_height="100dp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

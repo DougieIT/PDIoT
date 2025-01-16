@@ -9,18 +9,20 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import com.specknet.pdiotapp.bluetooth.ConnectingActivity
 import com.specknet.pdiotapp.history.ViewHistoryActivity
 import com.specknet.pdiotapp.live.LiveDataActivity
+import com.specknet.pdiotapp.live.SleepClassification
 import com.specknet.pdiotapp.onboarding.OnBoardingActivity
 
 class SelectionActivity : AppCompatActivity() {
 
     // UI elements
-    lateinit var liveProcessingButton: Button
-    lateinit var pairingButton: Button
-    lateinit var viewHistoryButton : Button
-    lateinit var currentUserTxt: TextView
+    lateinit var liveProcessingButton: CardView
+    lateinit var pairingButton: CardView
+    lateinit var viewHistoryButton : CardView
+    lateinit var sleepEfficiencyButton : CardView
     lateinit var permissionAlertDialog: AlertDialog.Builder
 
     lateinit var user_email : String
@@ -28,16 +30,18 @@ class SelectionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_selection)
+        Log.d("UI FLOW:", "LIVE DATA")
 
         Log.d("Selection activity", "fdbfgfvgft4")
+        user_email = intent.getStringExtra("user_email").toString()
 
-        currentUserTxt = findViewById(R.id.currentUser)
-        user_email = intent.getStringExtra("user_email") ?: "No User"
-        currentUserTxt.text = user_email
 
-        liveProcessingButton = findViewById(R.id.live_button)
-        pairingButton = findViewById(R.id.ble_button)
-        viewHistoryButton = findViewById(R.id.historyButton)
+
+
+        liveProcessingButton = findViewById(R.id.live_card)
+        pairingButton = findViewById(R.id.ble_card)
+        viewHistoryButton = findViewById(R.id.history_card)
+        sleepEfficiencyButton = findViewById(R.id.sleep_card)
 
         permissionAlertDialog = AlertDialog.Builder(this)
 
@@ -51,6 +55,12 @@ class SelectionActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        sleepEfficiencyButton.setOnClickListener {
+            val intent = Intent(this, SleepClassification::class.java)
+            intent.putExtra("user_email", user_email)
+            startActivity(intent)
+        }
+
         pairingButton.setOnClickListener {
             val intent = Intent(this, ConnectingActivity::class.java)
             startActivity(intent)
@@ -60,6 +70,10 @@ class SelectionActivity : AppCompatActivity() {
             val intent =Intent(this, ViewHistoryActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    override fun onBackPressed() {
+        finishAffinity() // Exits the app completely
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

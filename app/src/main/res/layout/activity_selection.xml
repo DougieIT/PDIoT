@@ -10,63 +10,249 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
 
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="300px"
-            android:text="I want to"
-            android:textSize="24sp"
+        <!-- Card 1: Live Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/live_card"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="6dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintHeight_default="percent"
+            app:layout_constraintHeight_percent="0.24"
+            app:layout_constraintWidth_percent="0.8"
 
-        <Button
-            android:id="@+id/live_button"
-            android:layout_width="550px"
-            android:layout_height="wrap_content"
-            android:text="Watch live processing"
-            android:textColor="#FFFFFF"
-            app:layout_constraintBottom_toTopOf="@+id/historyButton"
+            android:background="@drawable/gradient_background">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:background="@drawable/gradient_background">
+
+                <ImageView
+                    android:id="@+id/live_card_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/activity6" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="4dp">
+
+                    <ImageView
+                        android:id="@+id/live_card_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="Live Card Icon"
+                        android:src="@drawable/exercise"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/live_card_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Watch live processing"
+                        android:textSize="14sp"
+                        android:gravity="center" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Card 2: Sleep Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/sleep_card"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="12dp"
+            android:layout_marginTop="8dp"
+
+            app:cardElevation="6dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView2" />
+            app:layout_constraintTop_toBottomOf="@+id/live_card"
+            app:layout_constraintHeight_default="percent"
+            app:layout_constraintHeight_percent="0.24"
+            app:layout_constraintWidth_percent="0.8"
+            android:background="@drawable/gradient_background">
 
-        <!-- New Analyze Data Button -->
-        <Button
-            android:id="@+id/historyButton"
-            android:layout_width="550px"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50px"
-            android:text="View History"
-            android:textColor="#FFFFFF"
-            app:layout_constraintBottom_toTopOf="@+id/ble_button"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:background="@drawable/gradient_background">
+
+                <ImageView
+                    android:id="@+id/sleep_card_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/sleep6" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="4dp">
+
+                    <ImageView
+                        android:id="@+id/sleep_card_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="Sleep Card Icon"
+                        android:src="@drawable/wakefullness"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/sleep_card_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sleep Monitoring"
+                        android:textSize="14sp"
+                        android:gravity="center" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Card 3: History Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/history_card"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="12dp"
+            android:layout_marginTop="8dp"
+
+            app:cardElevation="6dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/live_button" />
+            app:layout_constraintTop_toBottomOf="@+id/sleep_card"
+            app:layout_constraintHeight_default="percent"
+            app:layout_constraintHeight_percent="0.24"
+            app:layout_constraintWidth_percent="0.8"
+            android:background="@drawable/gradient_background">
 
-        <Button
-            android:id="@+id/ble_button"
-            android:layout_width="550px"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50px"
-            android:text="Connect sensors"
-            android:textColor="#FFFFFF"
-            app:layout_constraintBottom_toBottomOf="parent"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:background="@drawable/gradient_background">
+
+                <ImageView
+                    android:id="@+id/history_card_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/history3" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="4dp">
+
+                    <ImageView
+                        android:id="@+id/history_card_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="History Card Icon"
+                        android:src="@drawable/monitoring"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/history_card_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="View History"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Card 4: Bluetooth Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/ble_card"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="6dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/historyButton" />
+            app:layout_constraintTop_toBottomOf="@+id/history_card"
+            android:layout_marginTop="8dp"
+
+            app:layout_constraintHeight_default="percent"
+            app:layout_constraintHeight_percent="0.24"
+            app:layout_constraintWidth_percent="0.8"
+            android:background="@drawable/gradient_background">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:background="@drawable/gradient_background">
+
+                <ImageView
+                    android:id="@+id/ble_card_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/bluetooth3" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="4dp">
+
+                    <ImageView
+                        android:id="@+id/ble_card_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="Bluetooth Card Icon"
+                        android:src="@drawable/bluetooth_searching"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/ble_card_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Connect Bluetooth"
+                        android:textSize="14sp"
+                        android:gravity="center" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <TextView
-        android:id="@+id/currentUser"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        app:layout_anchor="@+id/constraintLayout"
-        app:layout_anchorGravity="top|center" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

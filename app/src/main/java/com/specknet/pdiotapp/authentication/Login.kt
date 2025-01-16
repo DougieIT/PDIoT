@@ -31,18 +31,13 @@ class LoginActivity : AppCompatActivity() {
         Log.d("loginpage", "loginpage")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+        Log.d("UI FLOW:", "LOGIN")
+
 
         mAuth = FirebaseAuth.getInstance()
-        val currentUser = mAuth.currentUser
 
         // Check if the user is already logged in
-        if (currentUser != null) {
-            // User is already logged in, navigate to main page
-            //startActivity(Intent(this, MainActivity::class.java))
-            Log.d("here","here")
-            //finish()
-        }
-        Log.d("here1", "here1")
+
 
         // Initialize UI elements
         val signInButton: Button = findViewById(R.id.loginButton)
@@ -50,7 +45,6 @@ class LoginActivity : AppCompatActivity() {
         //  val signUp: TextView = findViewById(R.id.)
         username = findViewById(R.id.emailTxtBox)
         password = findViewById(R.id.passwordTextBox)
-        Log.d("here2", "here2")
 
 
         var user : FirebaseUser?= null

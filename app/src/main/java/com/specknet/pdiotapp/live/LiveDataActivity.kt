@@ -118,6 +118,8 @@ class LiveDataActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_data)
+        Log.d("UI FLOW:", "LIVE DATA")
+
 
         val db = AppDatabase.getDatabase(applicationContext)
         historyManager = db.activityHistoryManager()
@@ -140,7 +142,6 @@ class LiveDataActivity : AppCompatActivity() {
             physicalModel = Interpreter(loadModelFile("TRY_2.tflite"))
             socialModel = Interpreter(loadModelFile("TRY_2.tflite"))
             // **Load the new physical model**
-            physicalModelNew = Interpreter(loadModelFile("TRY_3.tflite"))
         } catch (e: IOException) {
             Log.e("ModelError", "Error loading models", e)
         }
@@ -151,7 +152,6 @@ class LiveDataActivity : AppCompatActivity() {
             wakefulModel to Pair(wakefulTextView, normalizationParamsTRY2),
             physicalModel to Pair(physicalTextView, normalizationParamsTRY2),
             socialModel to Pair(socialTextView, normalizationParamsTRY2),
-//            physicalModelNew to Pair(physicalTextViewNew, normalizationParamsTRY3) // New model and TextView
         )
 
         val windowSize = 50  // Adjust based on model requirements
@@ -483,6 +483,5 @@ class LiveDataActivity : AppCompatActivity() {
         wakefulModel.close()
         physicalModel.close()
         socialModel.close()
-        physicalModelNew.close() // Close the new interpreter
     }
 }
